@@ -707,8 +707,8 @@ class plgVmPaymentBitPay extends vmPSPlugin
         $this->logInfo ('invoice ' . implode (' / ', $response), 'message');
         if (isset($response['url']))
         {
-            header('Location: ' . $response['url']);
 			$cart->emptyCart ();
+            header('Location: ' . $response['url']);
             exit;
         }
         else
