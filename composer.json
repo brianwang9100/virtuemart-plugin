@@ -13,9 +13,6 @@
         "source":"https://github.com/bitpay/virtuemart-plugin"
     },
     "minimum-stability":"stable",
-    "require":{
-
-    },
     "require-dev":{
         "phpmd/phpmd":"*",
         "phpdocumentor/phpdocumentor":"*",
