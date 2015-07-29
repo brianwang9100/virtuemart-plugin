@@ -47,6 +47,8 @@ class plgVmPaymentBitPay extends vmPSPlugin
         parent::__construct($subject, $config);
         $this->_loggable   = true;
         $this->tableFields = array_keys($this->getTableSQLFields());
+		$this->_tablepkey = 'id';
+		$this->_tableId = 'id';
         $varsToPush        = $this->getVarsToPush();
         $this->setConfigParameterable($this->_configTableFieldName, $varsToPush);
     }
@@ -101,6 +103,7 @@ class plgVmPaymentBitPay extends vmPSPlugin
         {
             return NULL;
         }
+		VmConfig::loadJLang('com_virtuemart');
 
         $html = '<table class="adminlist">' . "\n";
         $html .= $this->getHtmlHeaderBE();
@@ -308,6 +311,9 @@ class plgVmPaymentBitPay extends vmPSPlugin
     {
         return $this->declarePluginParams('payment', $name, $id, $data);
     }
+	function plgVmDeclarePluginParamsPaymentVM3( &$data) {
+		return $this->declarePluginParams('payment', $data);
+	}
 
     /**
      * @param $name
@@ -370,7 +376,15 @@ class plgVmPaymentBitPay extends vmPSPlugin
         }
 
         // Call BitPay
-        $curl   = curl_init('https://bitpay.com/api/invoice/'.$bitpay_data['id']);
+		if ($method->network == "test")
+		{
+			$network_uri = 'test.bitpay.com';
+		}
+		else
+		{
+			$network_uri = 'bitpay.com';
+		}
+        $curl   = curl_init('https://' . $network_uri . '/api/invoice/'.$bitpay_data['id']);
         $length = 0;
 
         $uname  = base64_encode($method->merchant_apikey);
@@ -585,23 +599,32 @@ class plgVmPaymentBitPay extends vmPSPlugin
             return false;
         }
         // 		$params = new JParameter($payment->payment_params);
-        $lang     = JFactory::getLanguage();
-        $filename = 'com_virtuemart';
-        $lang->load($filename, JPATH_ADMINISTRATOR);
+        // $lang     = JFactory::getLanguage();
+        // $filename = 'com_virtuemart';
+        // $lang->load($filename, JPATH_ADMINISTRATOR);
         $vendorId = 0;
         $html     = "";
+
+		VmConfig::loadJLang('com_virtuemart',true);
+		VmConfig::loadJLang('com_virtuemart_orders', TRUE);
+
+		$this->getPaymentCurrency($method);
+
 
         if (!class_exists('VirtueMartModelOrders'))
         {
             require(JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'orders.php');
         }
+
         $this->getPaymentCurrency($method, true);
+		$currency_code_3 = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+		$email_currency = $this->getEmailCurrency($method);
+
 
         // END printing out HTML Form code (Payment Extra Info)
         $q  = 'SELECT `currency_code_3` FROM `#__virtuemart_currencies` WHERE `virtuemart_currency_id`="' . $method->payment_currency . '" ';
         $db = JFactory::getDBO();
         $db->setQuery($q);
-        $currency_code_3        = $db->loadResult();
         $paymentCurrency        = CurrencyDisplay::getInstance($method->payment_currency);
         $totalInPaymentCurrency = round($paymentCurrency->convertCurrencyTo($method->payment_currency, $order['details']['BT']->order_total, false), 2);
         $cd                     = CurrencyDisplay::getInstance($cart->pricesCurrency);
@@ -610,13 +633,14 @@ class plgVmPaymentBitPay extends vmPSPlugin
 
         $options['transactionSpeed'] = 'high';
         $options['currency']         = $currency_code_3;
-        $options['notificationURL']  = (JROUTE::_ (JURI::root () . 'index.php?option                                                 = com_virtuemart&view = pluginresponse&task = pluginnotification&tmpl   = component'));
-        $options['redirectURL']      = (JROUTE::_ (JURI::root () . 'index.php?option                                                 = com_virtuemart&view = pluginresponse&task = pluginresponsereceived&on = ' . $order['details']['BT']->order_number . '&pm = ' . $order['details']['BT']->virtuemart_paymentmethod_id . '&Itemid = ' . JRequest::getInt ('Itemid')));
+        $options['notificationURL']  = (JROUTE::_ (JURI::root () . 'index.php?option=com_virtuemart&view=pluginresponse&task=pluginnotification&tmpl=component'));
+        $options['redirectURL']      = (JROUTE::_ (JURI::root () . 'index.php?option=com_virtuemart&view=pluginresponse&task=pluginresponsereceived&on=' . $order['details']['BT']->order_number . '&pm=' . $order['details']['BT']->virtuemart_paymentmethod_id . '&Itemid=' . JRequest::getInt ('Itemid')));
         $options['posData']          = '{"id_order": "' . $order['details']['BT']->order_number . '"';
         $options['posData']         .= ', "hash": "' . crypt($order['details']['BT']->order_number, $method->merchant_apikey) . '"';
         $options['posData']         .= '}';
         $options['orderID']          = $order['details']['BT']->order_number;
         $options['price']            = $order['details']['BT']->order_total;
+
 
         $postOptions = array('orderID', 'itemDesc', 'itemCode', 'notificationEmail', 'notificationURL', 'redirectURL',
             'posData', 'price', 'currency', 'physical', 'fullNotifications', 'transactionSpeed', 'buyerName',
@@ -633,7 +657,15 @@ class plgVmPaymentBitPay extends vmPSPlugin
         $post = json_encode($post);
 
         // Call BitPay
-        $curl   = curl_init('https://bitpay.com/api/invoice/');
+		if ($method->network == "test")
+		{
+			$network_uri = 'test.bitpay.com';
+		}
+		else
+		{
+			$network_uri = 'bitpay.com';
+		}
+        $curl   = curl_init('https://' . $network_uri . '/api/invoice/');
         $length = 0;
         if ($post)
         {
@@ -676,6 +708,7 @@ class plgVmPaymentBitPay extends vmPSPlugin
         if (isset($response['url']))
         {
             header('Location: ' . $response['url']);
+			$cart->emptyCart ();
             exit;
         }
         else
@@ -716,6 +749,32 @@ class plgVmPaymentBitPay extends vmPSPlugin
         }
         return ($char);
     }
+	/**
+	 * @param $virtuemart_paymentmethod_id
+	 * @param $paymentCurrencyId
+	 * @return bool|null
+	 */
+	function plgVmgetEmailCurrency($virtuemart_paymentmethod_id, $virtuemart_order_id, &$emailCurrencyId) {
+		if (!($method = $this->getVmPluginMethod($virtuemart_paymentmethod_id))) {
+			return NULL; // Another method was selected, do nothing
+		}
+		if (!$this->selectedThisElement($method->payment_element)) {
+			return FALSE;
+		}
+		if (!($payments = $this->getDatasByOrderId($virtuemart_order_id))) {
+			// JError::raiseWarning(500, $db->getErrorMsg());
+			return '';
+		}
+		if (empty($payments[0]->email_currency)) {
+			$vendorId = 1; //VirtueMartModelVendor::getLoggedVendor();
+			$db = JFactory::getDBO();
+			$q = 'SELECT   `vendor_currency` FROM `#__virtuemart_vendors` WHERE `virtuemart_vendor_id`=' . $vendorId;
+			$db->setQuery($q);
+			$emailCurrencyId = $db->loadResult();
+		} else {
+			$emailCurrencyId = $payments[0]->email_currency;
+		}
+	}
 }
 
 defined('_JEXEC') or die('Restricted access');

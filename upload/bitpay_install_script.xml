@@ -22,9 +22,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
-<!DOCTYPE install PUBLIC "-//Joomla! 1.5//DTD plugin 1.0//EN" "http://www.joomla.org/xml/dtd/1.5/plugin-install.dtd">
+<!DOCTYPE install PUBLIC "-//Joomla! 2.5//DTD plugin 1.0//EN" "http://www.joomla.org/xml/dtd/1.5/plugin-install.dtd">
 
-<install version="1.5" type="plugin" group="vmpayment">
+<install version="2.5" type="plugin" group="vmpayment" method="upgrade">
 
 	<name>BitPay VirtueMart Integration</name>
 
@@ -38,6 +38,7 @@ THE SOFTWARE.
 	<files>
 		<filename plugin="bitpay">bitpay.xml</filename>
 		<filename plugin="bitpay">bitpay.php</filename>
+		<folder>language</folder>
 	</files>
 
 	<languages>

@@ -22,8 +22,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
-<install version="1.5" type="plugin" group="vmpayment" >
-    <name>VMPAYMENT_BITPAY</name>
+<extension version="2.5" type="plugin" group="vmpayment" method="upgrade">
+    <name>VM Payment - BitPay</name>
     <creationDate>July 27 2012</creationDate>
     <author>BitPay</author>
     <authorUrl>http://www.bitpay.com</authorUrl>
@@ -31,15 +31,31 @@ THE SOFTWARE.
     <license>http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL</license>
     <version>1.0.0</version>
     <description>BitPay payment plugin</description>
-    <languages>
-	<language tag="en-GB">en-GB.plg_vmpayment_bitpay.ini</language>
-    </languages>
     <files>
-	<filename plugin="bitpay">bitpay.php</filename>
+	       <filename plugin="bitpay">bitpay.php</filename>
+           <folder>language</folder>
     </files>
-	<params addpath="/plugins/vmpayment/bitpay" />
     <params addpath="/administrator/components/com_virtuemart/elements">
 
-	<param name="merchant_apikey" type="text"  label="Merchant API Key" description="Merchant API Key" />
+    	<param name="merchant_apikey" type="text"  label="VMPAYMENT_BITPAY_API_KEY_LABEL" description="VMPAYMENT_BITPAY_API_KEY_LABEL" />
+        <param name="network" type="list" default="live" label="VMPAYMENT_BITPAY_NETWORK_LABEL"
+           description="">
+            <option value="live">livenet (www.bitpay.com)</option>
+            <option value="test">testnet (test.bitpay.com)</option>
+        </param>
     </params>
-</install>
+    <config>
+        <fields name="params">
+            <fieldset name="basic">
+                    <field name="merchant_apikey" type="text" label="VMPAYMENT_BITPAY_API_KEY_LABEL" description="VMPAYMENT_BITPAY_API_KEY_LABEL"/>
+
+                    <field name="network" type="list" default="live" label="VMPAYMENT_BITPAY_NETWORK_LABEL"
+                       description="">
+                        <option value="live">livenet (www.bitpay.com)</option>
+                        <option value="test">testnet (test.bitpay.com)</option>
+                    </field>
+
+            </fieldset>
+        </fields>
+    </config>
+</extension>
